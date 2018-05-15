@@ -1,65 +1,101 @@
 version: '2'
 services:
-  # MongoDB: https://hub.docker.com/_/mongo/
+  # # MongoDB: https://hub.docker.com/_/mongo/
   mongodb:
     image: mongo:3
     volumes:
-      - /mnt/bigdisk/DVolumes/Graylog2/Mongo/data:/data/db
+      - mongo_data:/data/db
   # Elasticsearch: https://www.elastic.co/guide/en/elasticsearch/reference/5.6/docker.html
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:5.6.6
+  elasticsearch1:
+    image: elasticsearch:5.6.9-alpine
+    container_name: elasticsearch1
     volumes:
-      - /mnt/bigdisk/DVolumes/Graylog2/ES/data:/usr/share/elasticsearch/data
-      #- /mnt/bigdisk/DVolumes/Graylog2/ES/config:/usr/share/elasticsearch/config
+      - es_data:/usr/share/elasticsearch/data
     environment:
-      - http.host=0.0.0.0
-      - transport.host=localhost
-      - network.host=0.0.0.0
-      # Disable X-Pack security: https://www.elastic.co/guide/en/elasticsearch/reference/5.6/security-settings.html#general-security-settings
+      - cluster.name=es-cluster
+      - bootstrap.memory_lock=true
       - xpack.security.enabled=false
-      - "ES_JAVA_OPTS=-Xms1024m -Xmx4096m"
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
     ulimits:
       memlock:
         soft: -1
         hard: -1
-    mem_limit: 4g
+    mem_limit: 1g
+    networks:
+      #svc:
+      es:
     ports:
       - 9200:9200
-  # Graylog: https://hub.docker.com/r/graylog/graylog/
-  graylog:
-    image: graylog/graylog:2.4.3-1
+  elasticsearch2:
+    image: elasticsearch:5.6.9-alpine
     volumes:
-      - /mnt/bigdisk/DVolumes/Graylog2/Graylog2/journal:/usr/share/graylog/data/journal
-      #- /mnt/bigdisk/DVolumes/Graylog2/Graylog2/config:/usr/share/graylog/data/config
+      - es_data2:/usr/share/elasticsearch/data
     environment:
-      # CHANGE ME!
-      - GRAYLOG_PASSWORD_SECRET=somepasswordpepper
-      # Password: admin
-      - GRAYLOG_ROOT_PASSWORD_SHA2=8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918
-      - GRAYLOG_WEB_ENDPOINT_URI=http://127.0.0.1:9000/api
-    links:
-      - mongodb:mongo
-      - elasticsearch
-    depends_on:
-      - mongodb
-      - elasticsearch
-    ports:
-      # Graylog web interface and REST API
-      - 9000:9000
-      # Syslog TCP
-      - 514:514
-      # Syslog UDP
-      - 514:514/udp
-      # GELF TCP
-      - 12201:12201
-      # GELF UDP
-      - 12201:12201/udp
-#volumes:
-#  mongo_data:
-#    driver: local
-#  es_config:
-#    driver: local
-#  es_data:
-#    driver: local
-#  graylog_journal:
-#    driver: local
+      - cluster.name=es-cluster
+      - bootstrap.memory_lock=true
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - "discovery.zen.ping.unicast.hosts=elasticsearch1"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    mem_limit: 1g
+    networks:
+      #svc:
+      es:
+  # Graylog: https://hub.docker.com/r/graylog/graylog/
+#  graylog:
+#    image: graylog2/server:2.4.4-1
+#    volumes:
+#      - graylog_journal:/usr/share/graylog/data/journal
+#      - ./config:/usr/share/graylog/data/config
+#      #- /root/DHLee/Graylog2/GeoLite2-City_20180403/GeoLite2-City.mmdb:/etc/graylog/server/GeoLite2-City.mmdb
+#    environment:
+#      # CHANGE ME!
+#      - GRAYLOG_PASSWORD_SECRET=somepasswordpepper
+#      # Password: admin
+#      - GRAYLOG_ROOT_PASSWORD_SHA2=8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918
+#      #- GRAYLOG_WEB_ENDPOINT_URI=http://127.0.0.1:9000/api
+#      - GRAYLOG_WEB_ENDPOINT_URI=http://10.34.77.244:9000/
+#      #- GRAYLOG_REST_LISTEN_URI="http://10.161.135.120:9000/api/
+#      - GRAYLOG_REST_LISTEN_URI=http://0.0.0.0:9000/api/
+#      #- GRAYLOG_HTTP_EXTERNAL_URI="http://10.161.135.120:9000/api
+#      - GRAYLOG_ELASTICSEARCH_HOSTS="http://elasticsearch1:9200"
+#    networks:
+#      svc:
+#    links:
+#      - mongodb:mongo
+#      - elasticsearch1
+#    depends_on:
+#      - mongodb
+#      - elasticsearch1
+#      - elasticsearch2
+#    ports:
+#      # Graylog web interface and REST API
+#      - 9000:9000
+#      #- 12900:12900
+#      # Syslog TCP
+#      - 514:514
+#      # Beats
+#      - 5044:5044
+#      # Syslog UDP
+#      - 514:514/udp
+#      # GELF TCP
+#      - 12201:12201
+#      # GELF UDP
+#      - 12201:12201/udp
+volumes:
+  mongo_data:
+    driver: local
+  es_config:
+    driver: local
+  es_data:
+    driver: local
+  es_data2:
+    driver: local
+  graylog_journal:
+    driver: local
+networks:
+  svc:
+  es:
