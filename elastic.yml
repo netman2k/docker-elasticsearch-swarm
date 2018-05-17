@@ -53,9 +53,6 @@ services:
     networks:
       svc:
       es:
-volumes:
-  es_data:
-    driver: local
 networks:
   svc:
   es:
