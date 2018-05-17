@@ -1,0 +1,58 @@
+version: '2'
+services:
+  # Elasticsearch: https://www.elastic.co/guide/en/elasticsearch/reference/5.6/docker.html
+  es-leader:
+    image: elasticsearch:5.6.9-alpine
+    container_name: elasticsearch
+    volumes:
+      - ./elastic/es-leader.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+    environment:
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    mem_limit: 1g
+    networks:
+      #svc:
+      es:
+    ports:
+      - 9200
+      - 9300
+  es-follower:
+    image: elasticsearch:5.6.9-alpine
+    volumes:
+      - ./elastic/es-follower.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+    environment:
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    mem_limit: 1g
+    networks:
+      #svc:
+      es:
+    ports:
+      - 9200
+      - 9300
+  kibana:
+    image: kibana:5.6.9
+    ports:
+      - 5601:5601
+    networks:
+      svc:
+      es:
+  cerebro:
+    image: yannart/cerebro:latest
+    ports:
+      - 9000:9000
+    networks:
+      svc:
+      es:
+volumes:
+  es_data:
+    driver: local
+networks:
+  svc:
+  es:
