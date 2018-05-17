@@ -4,8 +4,8 @@ discovery.zen.minimum_master_nodes: 2
 
 cluster.name: prod_es_cluster
 #node.name: prod_es_node1
-#node.master: true
-#node.data: true
+node.master: true
+node.data: true
 discovery.zen.ping_timeout: 10s
 
 network.host: 0.0.0.0
