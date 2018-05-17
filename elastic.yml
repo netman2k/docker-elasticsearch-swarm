@@ -1,5 +1,6 @@
 # References:
-#  - https://www.elastic.co/guide/en/elasticsearch/reference/5.6/docker.html
+# - https://docs.docker.com/compose/compose-file/compose-file-v2/
+# - https://www.elastic.co/guide/en/elasticsearch/reference/5.6/docker.html
 version: '2.2'
 services:
   # ElasticSearch Master nodes
