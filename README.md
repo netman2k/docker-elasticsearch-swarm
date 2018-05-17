@@ -16,20 +16,20 @@ sysctl -p
 
 ## Start containers
 다음 커맨드는 ElasticSearch 2 master nodes, 1 data node, Kibana, Cerebro를 기동시킨다.
-```
+```bash
 docker-compose up -d
 ```
 
 ## Scaling ElasticSearch
 ### ElasticSearch Master node scaling
 다음 명령은 ElasticSearch master노드를 3개까지 증가시킨다.
-```
-docker-compose up --scale elasticsearch=3
+```bash
+docker-compose up --scale elasticsearch=3 --no-recreate -d
 ```
 ### ElasticSearch data node scaling
 다음 명령은 ElasticSearch data 노드를 3개까지 증가시킨다.
-```
-docker-compose up --scale elasticsearch-data=3
+```bash
+docker-compose up --scale elasticsearch-data=3 --no-recreate -d
 ```
 ## Kibana 접속 정보
 - http://localhost:5601
