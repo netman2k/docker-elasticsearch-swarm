@@ -1,9 +1,10 @@
-version: '2'
+# References:
+#  - https://www.elastic.co/guide/en/elasticsearch/reference/5.6/docker.html
+version: '2.2'
 services:
-  # Elasticsearch: https://www.elastic.co/guide/en/elasticsearch/reference/5.6/docker.html
+  # ElasticSearch Master nodes
   elasticsearch:
     image: elasticsearch:5.6.9-alpine
-    #container_name: elasticsearch
     volumes:
       - ./elastic/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
     environment:
@@ -19,6 +20,8 @@ services:
     ports:
       - 9200
       - 9300
+    scale: 2
+  # ElasticSearch data nodes
   elasticsearch-data:
     image: elasticsearch:5.6.9-alpine
     volumes:
