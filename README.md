@@ -20,9 +20,17 @@ docker-compose up --scale elasticsearch=3
 ```
 docker-compose up --scale elasticsearch-data=3
 ```
+## Kibana 접속 정보
+- http://localhost:5601
+
+## Cerebro 접속 정보
+- http://localhost:9000
+접속 시 ES URL을 물어볼 경우 다음과 같이 입력한다.
+- http://elasticsearch:9200
 
 ## Clean up containers
 다음 명령을 사용하면 사용중인 모든 컨테이너 및 볼륨들을 삭제한다.
 ```
 docker-compose down -v
 ```
+
