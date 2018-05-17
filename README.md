@@ -3,6 +3,17 @@ Docker Compose 를 통하여 ElasticSearch Cluster를 구성하는 방법을 기
 
 # How to
 
+## System setting
+### vm.max_map_count 증가
+다음 설정을 적용하지 않을 경우, 컨테이너가 실행되지 않을 수 있으니 설정을 반드시 한다.
+자세한 사항은 Reference Document를 참조한다.
+```
+cat <<EOF > /etc/sysctl.d/20-vm-max-map-count.conf 
+# https://www.elastic.co/guide/en/elasticsearch/reference/5.6/docker.html
+vm.max_map_count=262144
+sysctl -p
+```
+
 ## Start containers
 다음 커맨드는 ElasticSearch 2 master nodes, 1 data node, Kibana, Cerebro를 기동시킨다.
 ```
