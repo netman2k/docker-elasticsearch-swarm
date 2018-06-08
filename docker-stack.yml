@@ -1,0 +1,152 @@
+# REFERENCES:
+# - https://docs.docker.com/compose/compose-file/
+# - https://www.elastic.co/guide/en/elasticsearch/reference/5.6/docker.html
+version: '3.3'
+services:
+  # ElasticSearch Coordinating nodes
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:${ES_VERSION:-5.6.9}
+    environment:
+      ES_JAVA_OPTS: '-Xms512m -Xmx512m'
+      cluster.name: "graylog_cluster"
+      node.name: "Coordinating-{{.Node.Hostname}}"
+      node.master: "false"
+      node.data: "false"
+      node.ingest: "false"
+      discovery.zen.minimum_master_nodes: 2
+      discovery.zen.ping.unicast.hosts: tasks.elasticsearch-master
+      MAX_LOCKED_MEMORY: unlimited
+      xpack.security.enabled: 'false'
+      xpack.monitoring.enabled: 'false'
+      xpack.watcher.enabled: 'false'
+      xpack.ml.enabled: 'false'
+      bootstrap.memory_lock: "false"
+    ports:
+      - target: 9200
+        published: 9200
+        protocol: tcp
+        mode: host
+    depends_on:
+      - elasticsearch-master
+    deploy:
+      endpoint_mode: dnsrr
+      mode: global
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          cpus: '0.30'
+          memory: 1G
+      placement:
+        constraints: [ node.role == manager ]
+    networks:
+      elastic_net:
+    healthcheck:
+        test: ping -c1 localhost >/dev/null 2>&1 || exit 1
+        interval: 1m
+        timeout: 10s
+        retries: 3
+  # ElasticSearch Master nodes
+  elasticsearch-master:
+    image: docker.elastic.co/elasticsearch/elasticsearch:${ES_VERSION:-5.6.9}
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    environment:
+      ES_JAVA_OPTS: '-Xms512m -Xmx512m'
+      cluster.name: "graylog_cluster"
+      network.host: _eth0:ipv4_
+      node.name: "Master-{{.Node.Hostname}}"
+      node.master: "true"
+      node.data: "false"
+      node.ingest: "false"
+      discovery.zen.minimum_master_nodes: 2
+      discovery.zen.ping.unicast.hosts: tasks.elasticsearch-master
+      MAX_LOCKED_MEMORY: unlimited
+      xpack.security.enabled: 'false'
+      xpack.monitoring.enabled: 'false'
+      xpack.watcher.enabled: 'false'
+      xpack.ml.enabled: 'false'
+      bootstrap.memory_lock: "false"
+    deploy:
+      endpoint_mode: dnsrr
+      mode: replicated
+      replicas: 3
+      resources:
+        limits:
+          cpus: '0.60'
+          memory: 2G
+        reservations:
+          cpus: '0.30'
+          memory: 1G
+      placement:
+        constraints: [ node.role == manager ]
+    networks:
+      elastic_net:
+  # ElasticSearch data nodes
+  elasticsearch-data:
+    image: docker.elastic.co/elasticsearch/elasticsearch:${ES_VERSION:-5.6.9}
+    volumes:
+      - es_data2:/usr/share/elasticsearch/data
+    environment:
+      ES_JAVA_OPTS: '-Xms2048m -Xmx2048m'
+      cluster.name: "graylog_cluster"
+      network.host: _eth0:ipv4_
+      node.name: "DATA-{{.Node.Hostname}}"
+      node.master: "false"
+      node.data: "true"
+      node.ingest: "false"
+      discovery.zen.minimum_master_nodes: 2
+      discovery.zen.ping.unicast.hosts: tasks.elasticsearch-master
+      MAX_LOCKED_MEMORY: unlimited
+      xpack.security.enabled: 'false'
+      xpack.monitoring.enabled: 'false'
+      xpack.watcher.enabled: 'false'
+      xpack.ml.enabled: 'false'
+      bootstrap.memory_lock: "false"
+    depends_on:
+      - elasticsearch-master
+    deploy:
+      mode: global
+      update_config:
+        parallelism: 1
+        delay: 10s
+      restart_policy:
+        condition: on-failure
+      resources:
+        limits:
+          cpus: '0.60'
+          memory: 2G
+        reservations:
+          cpus: '0.30'
+          memory: 1G
+      placement:
+        constraints:
+          - node.role == worker
+          - node.labels.storage == ssd
+    networks:
+      elastic_net:
+  kibana:
+    image: kibana:5.6.9
+    ports:
+      - 5601:5601
+    networks:
+      elastic_net:
+    deploy:
+      placement:
+        constraints: [ node.role == worker ]
+  cerebro:
+    image: yannart/cerebro:latest
+    ports:
+      - 9100:9000
+    networks:
+      elastic_net:
+volumes:
+  es_data:
+  es_data2:
+networks:
+  elastic_net:
+    driver: overlay
+    ipam:
+      driver: default
+      config:
+      - subnet: 172.16.238.0/24
