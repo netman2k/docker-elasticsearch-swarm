@@ -5,7 +5,7 @@ version: '3.3'
 services:
   # ElasticSearch Coordinating nodes
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:${ES_VERSION:-5.6.9}
+    image: docker.elastic.co/elasticsearch/elasticsearch:${TAG:-5.6.9}
     environment:
       ES_JAVA_OPTS: '-Xms512m -Xmx512m'
       cluster.name: "graylog_cluster"
@@ -48,7 +48,7 @@ services:
         retries: 3
   # ElasticSearch Master nodes
   elasticsearch-master:
-    image: docker.elastic.co/elasticsearch/elasticsearch:${ES_VERSION:-5.6.9}
+    image: docker.elastic.co/elasticsearch/elasticsearch:${TAG}
     volumes:
       - es_data:/usr/share/elasticsearch/data
     environment:
@@ -84,7 +84,7 @@ services:
       elastic_net:
   # ElasticSearch data nodes
   elasticsearch-data:
-    image: docker.elastic.co/elasticsearch/elasticsearch:${ES_VERSION:-5.6.9}
+    image: docker.elastic.co/elasticsearch/elasticsearch:${TAG}
     volumes:
       - es_data2:/usr/share/elasticsearch/data
     environment:
@@ -126,7 +126,7 @@ services:
     networks:
       elastic_net:
   kibana:
-    image: kibana:5.6.9
+    image: kibana:${TAG}
     ports:
       - 5601:5601
     networks:
