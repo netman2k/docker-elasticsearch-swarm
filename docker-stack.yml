@@ -20,7 +20,7 @@ services:
       xpack.monitoring.enabled: 'false'
       xpack.watcher.enabled: 'false'
       xpack.ml.enabled: 'false'
-      bootstrap.memory_lock: "false"
+      bootstrap.memory_lock: "true"
     ports:
       - target: 9200
         published: 9200
@@ -39,6 +39,9 @@ services:
           memory: 1G
       placement:
         constraints: [ node.role == manager ]
+    configs:
+      - source: limits.conf
+        target: /etc/security/limits.conf
     networks:
       elastic_net:
     healthcheck:
@@ -48,11 +51,11 @@ services:
         retries: 3
   # ElasticSearch Master nodes
   elasticsearch-master:
-    image: docker.elastic.co/elasticsearch/elasticsearch:${TAG}
+    image: docker.elastic.co/elasticsearch/elasticsearch:${TAG:-5.6.9}
     volumes:
       - es_data:/usr/share/elasticsearch/data
     environment:
-      ES_JAVA_OPTS: '-Xms512m -Xmx512m'
+      ES_JAVA_OPTS: '-Xms1024m -Xmx1024m'
       cluster.name: "graylog_cluster"
       network.host: _eth0:ipv4_
       node.name: "Master-{{.Node.Hostname}}"
@@ -66,7 +69,7 @@ services:
       xpack.monitoring.enabled: 'false'
       xpack.watcher.enabled: 'false'
       xpack.ml.enabled: 'false'
-      bootstrap.memory_lock: "false"
+      bootstrap.memory_lock: "true"
     deploy:
       endpoint_mode: dnsrr
       mode: replicated
@@ -74,17 +77,20 @@ services:
       resources:
         limits:
           cpus: '0.60'
-          memory: 2G
+          memory: 3G
         reservations:
           cpus: '0.30'
-          memory: 1G
+          memory: 2G
       placement:
         constraints: [ node.role == manager ]
+    configs:
+      - source: limits.conf
+        target: /etc/security/limits.conf
     networks:
       elastic_net:
   # ElasticSearch data nodes
   elasticsearch-data:
-    image: docker.elastic.co/elasticsearch/elasticsearch:${TAG}
+    image: docker.elastic.co/elasticsearch/elasticsearch:${TAG:-5.6.9}
     volumes:
       - es_data2:/usr/share/elasticsearch/data
     environment:
@@ -102,7 +108,7 @@ services:
       xpack.monitoring.enabled: 'false'
       xpack.watcher.enabled: 'false'
       xpack.ml.enabled: 'false'
-      bootstrap.memory_lock: "false"
+      bootstrap.memory_lock: "true"
     depends_on:
       - elasticsearch-master
     deploy:
@@ -115,18 +121,21 @@ services:
       resources:
         limits:
           cpus: '0.60'
-          memory: 2G
+          memory: 4G
         reservations:
           cpus: '0.30'
-          memory: 1G
+          memory: 3G
       placement:
         constraints:
           - node.role == worker
           - node.labels.storage == ssd
+    configs:
+      - source: limits.conf
+        target: /etc/security/limits.conf
     networks:
       elastic_net:
   kibana:
-    image: kibana:${TAG}
+    image: kibana:${TAG:-5.6.9}
     ports:
       - 5601:5601
     networks:
@@ -134,15 +143,24 @@ services:
     deploy:
       placement:
         constraints: [ node.role == worker ]
+    depends_on:
+      - elasticsearch
   cerebro:
     image: yannart/cerebro:latest
     ports:
       - 9100:9000
     networks:
       elastic_net:
+    depends_on:
+      - elasticsearch
 volumes:
   es_data:
   es_data2:
+
+configs:
+  limits.conf:
+    file: ./limits.conf
+
 networks:
   elastic_net:
     driver: overlay
