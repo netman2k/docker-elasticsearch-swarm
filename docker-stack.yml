@@ -7,7 +7,7 @@ services:
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:${TAG:-5.6.9}
     environment:
-      ES_JAVA_OPTS: '-Xms512m -Xmx512m'
+      ES_JAVA_OPTS: '-Xms1024m -Xmx1024m'
       cluster.name: "graylog_cluster"
       node.name: "Coordinating-{{.Node.Hostname}}"
       node.master: "false"
@@ -33,10 +33,10 @@ services:
       mode: global
       resources:
         limits:
-          memory: 1G
+          memory: 2G
         reservations:
           cpus: '0.30'
-          memory: 1G
+          memory: 1500M
       placement:
         constraints: [ node.role == manager ]
     configs:
@@ -163,4 +163,6 @@ configs:
 
 networks:
   elastic_net:
-    driver: overlay
+    external:
+      name: ${ELASTICSEARCH_NETWORK_NAME:-elasticsearch}
+    
