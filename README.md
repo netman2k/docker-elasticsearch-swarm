@@ -144,10 +144,11 @@ docker service create --name elastic-cerebro \
 ```
 
 **접속 방법**
-- http://<Your one of Swarm manager IP>:9000
+
+```http://<Your one of Swarm manager IP>:9000```
 
 > 접속 시 ES URL을 물어볼 경우 다음과 같이 입력한다.
-- http://elasticsearch:9200
+```http://elasticsearch:9200```
 
 
 # Kibana 생성
