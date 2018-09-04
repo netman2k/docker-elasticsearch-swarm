@@ -156,7 +156,6 @@ docker service create --name elastic-cerebro \
 docker service create --name elastic-kibana \
   --network $NETWORK_ELASTIC \
   --publish "5601:5601" \
-  --env "ELASTICSEARCH_URL=tasks.elasticsearch" \
   --reserve-cpu 0.5 \
   --reserve-memory 2G --limit-memory 3G \
   --hostname kibana \
