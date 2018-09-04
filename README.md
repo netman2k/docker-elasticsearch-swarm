@@ -12,7 +12,8 @@ Elasticsearch에 메모리 설정하지 제대로하지 않을 경우 Swap을 �
 문제는 호스트 시스템에 설정된 값을 Dockerd이 그대로 가져가기 때문에, 반드시 먼저 호스트에 다음과 같이 설정을 해주도록 한다.
 
 ```
-echo -e "[Service]\nLimitMEMLOCK=infinity" | SYSTEMD_EDITOR=tee systemctl edit docker.service
+[ -d /etc/systemd/system/docker.service.d ] || mkdir -p /etc/systemd/system/docker.service.d/
+echo -e "[Service]\nLimitMEMLOCK=infinity" > /etc/systemd/system/docker.service.d/override.conf
 systemctl daemon-reload
 systemctl restart docker
 ```
