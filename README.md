@@ -82,6 +82,7 @@ docker service create --name elastic-data$NUM \
 
 ## 두번째, 세번째 Data 노드 생성
 > node label에 es=X 가 있는 만큼 증설한다. 예제에서는 3개(es=3까지 있음)의 Data 노드가 있다
+
 ```
 NUM=2
 docker service create --name elastic-data$NUM \
@@ -127,6 +128,7 @@ docker service create --name elastic-data$NUM \
   --constraint "node.labels.es==$NUM" \
   docker.elastic.co/elasticsearch/elasticsearch:5.6.9
 ```
+
 # Cerebro 생성
 > 본 예제에서는 Manager 노드에만 Cerebro가 생성되도록 하였다.
 
