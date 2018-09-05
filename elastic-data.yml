@@ -1,0 +1,99 @@
+# REFERENCES:
+# - https://docs.docker.com/compose/compose-file/
+# - https://www.elastic.co/guide/en/elasticsearch/reference/5.6/docker.html
+version: '3.4'
+services:
+  # ElasticSearch data nodes
+  elasticsearch-data1:
+    image: docker.elastic.co/elasticsearch/elasticsearch:${TAG:-5.6.9}
+    volumes:
+      - es_data_vol:/usr/share/elasticsearch/data
+    environment: &environment
+      ES_JAVA_OPTS: '-Xms2048m -Xmx2048m'
+      cluster.name: ${CLUSTER_NAME:-elastic_cluster}
+      network.host: _eth0:ipv4_
+      node.name: "DATA-{{.Node.Hostname}}"
+      node.master: "false"
+      node.data: "true"
+      node.ingest: "false"
+      discovery.zen.minimum_master_nodes: 2
+      discovery.zen.ping.unicast.hosts: tasks.elasticsearch-master
+      MAX_LOCKED_MEMORY: unlimited
+      xpack.security.enabled: 'false'
+      xpack.monitoring.enabled: 'false'
+      xpack.watcher.enabled: 'false'
+      xpack.ml.enabled: 'false'
+      bootstrap.memory_lock: "true"
+    deploy:
+      mode: global
+      update_config:
+        parallelism: 1
+        delay: 10s
+      restart_policy:
+        condition: on-failure
+      resources:
+        limits:
+          cpus: '0.60'
+          memory: 4G
+        reservations:
+          cpus: '0.30'
+          memory: 3G
+      placement:
+        constraints:
+          - node.labels.es == 1
+    networks:
+      elastic_net:
+  elasticsearch-data2:
+    image: docker.elastic.co/elasticsearch/elasticsearch:${TAG:-5.6.9}
+    volumes:
+      - es_data_vol:/usr/share/elasticsearch/data
+    environment: *environment
+    deploy:
+      mode: global
+      update_config:
+        parallelism: 1
+        delay: 10s
+      restart_policy:
+        condition: on-failure
+      resources:
+        limits:
+          cpus: '0.60'
+          memory: 4G
+        reservations:
+          cpus: '0.30'
+          memory: 3G
+      placement:
+        constraints:
+          - node.labels.es == 2
+    networks:
+      elastic_net:
+  elasticsearch-data3:
+    image: docker.elastic.co/elasticsearch/elasticsearch:${TAG:-5.6.9}
+    volumes:
+      - es_data_vol:/usr/share/elasticsearch/data
+    environment: *environment
+    deploy:
+      mode: global
+      update_config:
+        parallelism: 1
+        delay: 10s
+      restart_policy:
+        condition: on-failure
+      resources:
+        limits:
+          cpus: '0.60'
+          memory: 4G
+        reservations:
+          cpus: '0.30'
+          memory: 3G
+      placement:
+        constraints:
+          - node.labels.es == 3
+    networks:
+      elastic_net:
+volumes:
+  es_data_vol:
+networks:
+  elastic_net:
+    external:
+      name: ${ELASTICSEARCH_NETWORK_NAME:-elasticsearch}

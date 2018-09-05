@@ -1,0 +1,13 @@
+version: '3.4'
+services:
+  cerebro:
+    image: yannart/cerebro:latest
+    ports:
+      - 9000:9000
+    networks:
+      elastic_net:
+networks:
+  elastic_net:
+    external:
+      name: ${ELASTICSEARCH_NETWORK_NAME:-elasticsearch}
+    
