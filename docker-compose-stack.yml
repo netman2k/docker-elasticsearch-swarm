@@ -1,14 +1,19 @@
+# NOTE 
+#   this configuration does not create any data node
+#   Your need to create data node service via docker cli
+#
 # REFERENCES:
 # - https://docs.docker.com/compose/compose-file/
 # - https://www.elastic.co/guide/en/elasticsearch/reference/5.6/docker.html
-version: '3.3'
+# 
+version: '3.4'
 services:
   # ElasticSearch Coordinating nodes
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:${TAG:-5.6.9}
     environment:
       ES_JAVA_OPTS: '-Xms1024m -Xmx1024m'
-      cluster.name: "graylog_cluster"
+      cluster.name: ${CLUSTER_NAME:-elastic_cluster}
       node.name: "Coordinating-{{.Node.Hostname}}"
       node.master: "false"
       node.data: "false"
@@ -56,7 +61,7 @@ services:
       - es_data:/usr/share/elasticsearch/data
     environment:
       ES_JAVA_OPTS: '-Xms1024m -Xmx1024m'
-      cluster.name: "graylog_cluster"
+      cluster.name: ${CLUSTER_NAME:-elastic_cluster}
       network.host: _eth0:ipv4_
       node.name: "Master-{{.Node.Hostname}}"
       node.master: "true"
@@ -88,74 +93,8 @@ services:
         target: /etc/security/limits.conf
     networks:
       elastic_net:
-  # ElasticSearch data nodes
-  elasticsearch-data:
-    image: docker.elastic.co/elasticsearch/elasticsearch:${TAG:-5.6.9}
-    volumes:
-      - es_data2:/usr/share/elasticsearch/data
-    environment:
-      ES_JAVA_OPTS: '-Xms2048m -Xmx2048m'
-      cluster.name: "graylog_cluster"
-      network.host: _eth0:ipv4_
-      node.name: "DATA-{{.Node.Hostname}}"
-      node.master: "false"
-      node.data: "true"
-      node.ingest: "false"
-      discovery.zen.minimum_master_nodes: 2
-      discovery.zen.ping.unicast.hosts: tasks.elasticsearch-master
-      MAX_LOCKED_MEMORY: unlimited
-      xpack.security.enabled: 'false'
-      xpack.monitoring.enabled: 'false'
-      xpack.watcher.enabled: 'false'
-      xpack.ml.enabled: 'false'
-      bootstrap.memory_lock: "true"
-    depends_on:
-      - elasticsearch-master
-    deploy:
-      mode: global
-      update_config:
-        parallelism: 1
-        delay: 10s
-      restart_policy:
-        condition: on-failure
-      resources:
-        limits:
-          cpus: '0.60'
-          memory: 4G
-        reservations:
-          cpus: '0.30'
-          memory: 3G
-      placement:
-        constraints:
-          - node.role == worker
-          - node.labels.storage == ssd
-    configs:
-      - source: limits.conf
-        target: /etc/security/limits.conf
-    networks:
-      elastic_net:
-  kibana:
-    image: kibana:${TAG:-5.6.9}
-    ports:
-      - 5601:5601
-    networks:
-      elastic_net:
-    deploy:
-      placement:
-        constraints: [ node.role == worker ]
-    depends_on:
-      - elasticsearch
-  cerebro:
-    image: yannart/cerebro:latest
-    ports:
-      - 9100:9000
-    networks:
-      elastic_net:
-    depends_on:
-      - elasticsearch
 volumes:
   es_data:
-  es_data2:
 
 configs:
   limits.conf:
