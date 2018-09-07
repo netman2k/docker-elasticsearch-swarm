@@ -93,6 +93,16 @@ services:
         target: /etc/security/limits.conf
     networks:
       elastic_net:
+  # https://github.com/justwatchcom/elasticsearch_exporter
+  elasticsearch_exporter:
+    image: justwatch/elasticsearch_exporter:1.0.2
+    command:
+      - '-es.uri=http://elasticsearch:9200'
+    ports:
+      - 9108:9108
+    networks:
+      elastic_net:
+
 volumes:
   es_data:
 
