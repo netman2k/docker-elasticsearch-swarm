@@ -29,7 +29,7 @@ Max locked memory         unlimited            unlimited            bytes
 다음은 아래 서비스 생성 시 사용할 값들을 환경변수로 저장한다.
 ```
 NETWORK_ELASTIC=elasticsearch
-CLUSTER_NAME=es_cluster
+CLUSTER_NAME=elastic_cluster
 ```
 
 # Overlay network 생성
