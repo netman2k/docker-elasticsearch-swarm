@@ -25,6 +25,28 @@ systemctl restart docker
 Max locked memory         unlimited            unlimited            bytes
 ```
 
+## Set limits 설정
+Elasticsearch는 nofile 및 memlock을 설정이 필요하다.
+현재 버전(18.XX)은 docker compose에서 limits 설정을 할 수 없다. 다행히 다음과 같이 docker daemon설정을 통하여 이를 해결할 수 있다.
+`/etc/docker/daemon.json`파일에 다음과 같이 설정을 넣어준 후 Docker daemon을 재기동한다.
+```
+# cat daemon.json
+{
+  "default-ulimits": {
+     "nofile": {
+       "Name": "nofile",
+       "Hard": 65536,
+       "Soft": 65536
+     },
+    "memlock": {
+      "Name": "memlock",
+      "Hard": -1,
+      "Soft": -1
+    }
+  }
+}
+```
+
 # Global Environment
 다음은 아래 서비스 생성 시 사용할 값들을 환경변수로 저장한다.
 ```
@@ -55,11 +77,22 @@ docker node update infa-swarm-t1102 --label-add es=2
 docker node update infa-swarm-t1103 --label-add es=3
 ```
 
-## 첫번째 Data 노드 생성
+## (선택사항) Docker Stack 을 통한 Data 노드 생성
+elastic-data.yml은 3개의 Data 노드가 생성되도록 설정되어있다.
+필요에따라 항목을 복사하여 증가 혹은 감소할 수 있도록 한다.
+```
+docker stack deploy -c elastic-data.yml elastic-data
+```
+
+## (선택사항) Docker Service를 통한 Data 노드 생성
+
+### 첫번째 Data 노드 생성
 ```
 NUM=1
+docker volume create elastic-data$NUM-vol
 docker service create --name elastic-data$NUM \
   --network $NETWORK_ELASTIC \
+  --mount type=volume,src=elastic-data$NUM-vol,dst=/usr/share/elasticsearch/data \
   --env "ES_JAVA_OPTS=-Xms2048m -Xmx2048m" \
   --env "cluster.name=$CLUSTER_NAME" \
   --env "network.host=_eth0:ipv4_" \
@@ -80,13 +113,14 @@ docker service create --name elastic-data$NUM \
   docker.elastic.co/elasticsearch/elasticsearch:5.6.9
 ```
 
-## 두번째, 세번째 Data 노드 생성
+### 두번째, 세번째 Data 노드 생성
 > node label에 es=X 가 있는 만큼 증설한다. 예제에서는 3개(es=3까지 있음)의 Data 노드가 있다
 
 ```
 NUM=2
 docker service create --name elastic-data$NUM \
   --network $NETWORK_ELASTIC \
+  --mount type=volume,src=elastic-data$NUM-vol,dst=/usr/share/elasticsearch/data \
   --env "ES_JAVA_OPTS=-Xms2048m -Xmx2048m" \
   --env "cluster.name=$CLUSTER_NAME" \
   --env "network.host=_eth0:ipv4_" \
@@ -109,6 +143,7 @@ docker service create --name elastic-data$NUM \
 NUM=3
 docker service create --name elastic-data$NUM \
   --network $NETWORK_ELASTIC \
+  --mount type=volume,src=elastic-data$NUM-vol,dst=/usr/share/elasticsearch/data \
   --env "ES_JAVA_OPTS=-Xms2048m -Xmx2048m" \
   --env "cluster.name=$CLUSTER_NAME" \
   --env "network.host=_eth0:ipv4_" \
